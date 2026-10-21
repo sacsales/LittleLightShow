@@ -12,12 +12,14 @@ RATE = 44100
 
 
 pygame.init()
-
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
 SCREEN_WIDTH = screen.get_width()
 SCREEN_HEIGHT = screen.get_height()
 
+LOWS_LOWER_BOUND = 20
+MIDS_LOWER_BOUND = 250
+MIDS_UPPER_BOUND = 800
 
 
 p = pyaudio.PyAudio()
@@ -58,14 +60,14 @@ bands = {
 
 particle_group = pygame.sprite.Group()
 
-def spawn_particles(n):
+def spawn_particles(n, color, radius):
     for _ in range(n):
-        pos = pygame.mouse.get_pos()
-        color = choice(("red", "green", "blue"))
+        pos = (randint(0, SCREEN_WIDTH), randint(0, SCREEN_HEIGHT))
+        color = color
         direction = pygame.math.Vector2(uniform(-1, 1), uniform(-1, 1))
         direction = direction.normalize()
         speed = randint(50, 400)
-        Particle(particle_group, pos, color, direction, speed)
+        Particle(particle_group, pos, color, direction, speed, radius=radius)
 
 
 def main():
@@ -87,7 +89,6 @@ def main():
             if not running:
                 break
             
-            
 
             data = stream.read(CHUNK, exception_on_overflow=False)
             samples = np.frombuffer(data, dtype=np.int16).astype(np.float32) #turn bytes to ints 
@@ -98,19 +99,33 @@ def main():
 
             newMag = mag[1:] * 4 / (CHUNK * 32768)
 
-            bass = newMag[(freq_bins >= 20) & (freq_bins < 250)]
+            bass = newMag[(freq_bins >= 20) & (freq_bins < 150)]
             bass_strength = np.mean(bass) if len(bass) else 0
-            print("Bass:", bass_strength)
-
-            # 5. Convert strength to a 0–1 value
             bass_level = np.clip(bass_strength * 100, 0, 1)
+            bass_particle_count = int(bass_level * 5)
 
-                # 6. Spawn particles according to loudness
-            particle_count = int(bass_level * 10)
+            mids = newMag[(freq_bins >= 150) & (freq_bins < 400)]
+            mids_strength = np.mean(mids) if len(mids) else 0
+            mids_level = np.clip(mids_strength * 100, 0, 1)
+            mids_particle_count = int(mids_level * 5)
 
-            if particle_count > 0:
-                spawn_particles(particle_count)
+            highMids = newMag[(freq_bins >= 300) & (freq_bins < 3500)]
+            highMids_strength = np.mean(highMids) if len(highMids) else 0
+            highMids_level = np.clip(highMids_strength * 100, 0, 1)
+            highMids_particle_count = int(highMids_level * 5)
 
+            highs = newMag[(freq_bins >= 3500) & (freq_bins < 12000)]
+            highs_strength = np.mean(highs) if len(highs) else 0
+            highs_level = np.clip(highs_strength * 100, 0, 1)
+            highs_particle_count = int(highs_level * 10)
+            
+            total_particle_count = bass_particle_count + mids_particle_count + highs_particle_count + highMids_particle_count
+
+            if total_particle_count > 0:
+                spawn_particles(bass_particle_count, (0, 242, 193), 40) #cyan
+                spawn_particles(mids_particle_count, (255, 44, 223), 20) #pink
+                spawn_particles(highs_particle_count, (255, 136, 0), 10) #orange
+                spawn_particles(highMids_particle_count, (0, 69, 255), 10) #elec blue
 
 
             dt = clock.tick() / 1000
@@ -119,7 +134,7 @@ def main():
             particle_group.update(dt)
             pygame.display.flip() 
 
-            print("Bass:", bass_strength, "Particles:", particle_count)
+            #print("Bass:", bass_strength, "Particles:", particle_count)
 
             
             
@@ -138,23 +153,29 @@ def main():
     
         
 
-#pygame particle stuff      
+#pygame particle stuff...
+
+
+#bigger + closer to bottom for bass (purple)
+#smaller + closer to top for highs (blue)
+#middle for mids (pink)
+
 
 class Particle(pygame.sprite.Sprite):
-    def __init__(self, groups, pos, color, direction, speed):
+    def __init__(self, groups, pos, color, direction, speed, radius):
         super().__init__(groups)
         self.pos = pygame.math.Vector2(pos) 
         self.color = color 
         self.direction = direction 
         self.speed = speed
         self.alpha = 255 
-        self.fade_speed = 500 
-        self.create_surf()
+        self.fade_speed = 100 
+        self.create_surf(radius)
 
-    def create_surf(self):
-        self.image = pygame.Surface((4,4)).convert_alpha()
+    def create_surf(self, radius):
+        self.image = pygame.Surface((80,80)).convert_alpha()
         self.image.set_colorkey("black")
-        pygame.draw.circle(surface=self.image, color=self.color, center=(2,2), radius=7)
+        pygame.draw.circle(surface=self.image, color=self.color, center=(40,40), radius=radius)
         self.rect = self.image.get_rect(center=self.pos)
 
 
