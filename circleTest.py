@@ -7,13 +7,12 @@ screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
 SCREEN_WIDTH = screen.get_width()
 SCREEN_HEIGHT = screen.get_height()
 
-running = True 
 
 
 particle_group = pygame.sprite.Group()
 
 def spawn_particles(n):
-    for i in range(n):
+    for _ in range(n):
         pos = pygame.mouse.get_pos()
         color = choice(("red", "green", "blue"))
         direction = pygame.math.Vector2(uniform(-1, 1), uniform(-1, 1))
