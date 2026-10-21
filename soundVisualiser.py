@@ -1,6 +1,8 @@
 import pyaudio
 import numpy as np
+import matplotlib.backends.backend_agg as agg
 import matplotlib.pyplot as plt
+import matplotlib
 import pygame 
 from random import choice, randint, uniform
 
@@ -27,16 +29,23 @@ stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE,
                 input=True, frames_per_buffer=CHUNK) #take mic input
 
 #plt.ion()
-#fig, (ax, ax2) = plt.subplots(2, figsize=(15, 8)) #plots
+fig, (ax, ax2) = plt.subplots(2, figsize=(15, 8)) #plots
 
 x = np.arange(CHUNK) #make list of numbers. how many? chunk. 
 freqs = np.fft.rfftfreq(CHUNK, 1 / RATE) #analysis's wave's x - all the different frequency buckets 
 freq_bins = freqs[1:]
 window = np.hanning(CHUNK) #smooth. 
 
-#line, = ax.plot(x, np.zeros(CHUNK)) #make flat line. changes in loop
-#ax.set_ylim(-32768, 32767)
-#ax.set_xlim(0, CHUNK)
+line, = ax.plot(x, np.zeros(CHUNK), color="white") #make flat line. changes in loop
+ax.set_ylim(-32768, 32767)
+ax.set_xlim(0, CHUNK)
+
+fig.patch.set_facecolor("black")
+ax.set_facecolor("black")
+ax2.set_facecolor("black")
+
+
+
 #set scales and stuff 
 
 #line_fft, = ax2.semilogx(freqs[1:], np.zeros(len(freqs) - 1), lw=2)
@@ -45,6 +54,16 @@ window = np.hanning(CHUNK) #smooth.
 #ax2.set_xlim(20, RATE / 2)
 #ax2.set_ylim(0, 0.1)  
 #more scales!
+
+matplotlib.use("Agg")
+
+canvas = agg.FigureCanvasAgg(fig)
+
+renderer = canvas.get_renderer()
+raw_data = renderer.tostring_argb()
+size = canvas.get_width_height()
+plot_surface = pygame.image.fromstring(raw_data, size, "ARGB")
+canvas.draw()
 
 bands = {
     "bass":   (20, 150),
@@ -89,10 +108,15 @@ def main():
             if not running:
                 break
             
+            dt = clock.tick() / 1000
 
             data = stream.read(CHUNK, exception_on_overflow=False)
             samples = np.frombuffer(data, dtype=np.int16).astype(np.float32) #turn bytes to ints 
-            #line.set_ydata(samples) #update the heights 
+            line.set_ydata(samples) #update the heights 
+            canvas.draw()
+
+            plot_surface = pygame.image.frombuffer(bytes(canvas.buffer_rgba()), canvas.get_width_height(),"RGBA")
+            
 
             samples -= samples.mean() #remove offset from bg noise
             mag = np.abs(np.fft.rfft(samples * window)) #funky fft stuff. how much of each frequency is in each sample? 
@@ -128,22 +152,21 @@ def main():
                 spawn_particles(highMids_particle_count, (0, 69, 255), 10) #elec blue
 
 
-            dt = clock.tick() / 1000
+            
             screen.fill((0,0,0))
+            screen.blit(plot_surface, (200, SCREEN_HEIGHT/2))
             particle_group.draw(screen)
             particle_group.update(dt)
             pygame.display.flip() 
 
             #print("Bass:", bass_strength, "Particles:", particle_count)
 
-            
-            
-            
 
             #line_fft.set_ydata(newMag) #fft adds up everything! divide by no. of samples * 32768 - convert from very very number to something on scale 
 
             #fig.canvas.draw() 
             #fig.canvas.flush_events()
+            
     finally:
         stream.stop_stream()
         stream.close()
@@ -156,9 +179,6 @@ def main():
 #pygame particle stuff...
 
 
-#bigger + closer to bottom for bass (purple)
-#smaller + closer to top for highs (blue)
-#middle for mids (pink)
 
 
 class Particle(pygame.sprite.Sprite):
