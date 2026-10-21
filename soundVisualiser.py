@@ -29,7 +29,7 @@ stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE,
                 input=True, frames_per_buffer=CHUNK) #take mic input
 
 #plt.ion()
-fig, (ax, ax2) = plt.subplots(2, figsize=(15, 8)) #plots
+fig, ax = plt.subplots(figsize=(15, 8))
 
 x = np.arange(CHUNK) #make list of numbers. how many? chunk. 
 freqs = np.fft.rfftfreq(CHUNK, 1 / RATE) #analysis's wave's x - all the different frequency buckets 
@@ -37,12 +37,13 @@ freq_bins = freqs[1:]
 window = np.hanning(CHUNK) #smooth. 
 
 line, = ax.plot(x, np.zeros(CHUNK), color="white") #make flat line. changes in loop
+ax.set_position([0, 0, 1, 1])
 ax.set_ylim(-32768, 32767)
 ax.set_xlim(0, CHUNK)
 
 fig.patch.set_facecolor("black")
 ax.set_facecolor("black")
-ax2.set_facecolor("black")
+#ax2.set_facecolor("black")
 
 
 
@@ -154,7 +155,12 @@ def main():
 
             
             screen.fill((0,0,0))
-            screen.blit(plot_surface, (200, SCREEN_HEIGHT/2))
+            plot_width, plot_height = plot_surface.get_size()
+
+            plot_x = (SCREEN_WIDTH - plot_width) // 2
+            plot_y = (SCREEN_HEIGHT - plot_height) // 2
+
+            screen.blit(plot_surface, (plot_x, plot_y))
             particle_group.draw(screen)
             particle_group.update(dt)
             pygame.display.flip() 
