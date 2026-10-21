@@ -5,8 +5,6 @@ import pygame
 from random import choice, randint, uniform
 
 
-
-
 CHUNK = 1024 * 2
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
@@ -27,23 +25,23 @@ stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE,
                 input=True, frames_per_buffer=CHUNK) #take mic input
 
 #plt.ion()
-fig, (ax, ax2) = plt.subplots(2, figsize=(15, 8)) #plots
+#fig, (ax, ax2) = plt.subplots(2, figsize=(15, 8)) #plots
 
 x = np.arange(CHUNK) #make list of numbers. how many? chunk. 
 freqs = np.fft.rfftfreq(CHUNK, 1 / RATE) #analysis's wave's x - all the different frequency buckets 
 freq_bins = freqs[1:]
 window = np.hanning(CHUNK) #smooth. 
 
-line, = ax.plot(x, np.zeros(CHUNK)) #make flat line. changes in loop
-ax.set_ylim(-32768, 32767)
-ax.set_xlim(0, CHUNK)
+#line, = ax.plot(x, np.zeros(CHUNK)) #make flat line. changes in loop
+#ax.set_ylim(-32768, 32767)
+#ax.set_xlim(0, CHUNK)
 #set scales and stuff 
 
-line_fft, = ax2.semilogx(freqs[1:], np.zeros(len(freqs) - 1), lw=2)
+#line_fft, = ax2.semilogx(freqs[1:], np.zeros(len(freqs) - 1), lw=2)
 #semi log to fit the scale. remove 0hz (no log). xs at the freq buckets, ys at 0s
 
-ax2.set_xlim(20, RATE / 2)
-ax2.set_ylim(0, 0.1)  
+#ax2.set_xlim(20, RATE / 2)
+#ax2.set_ylim(0, 0.1)  
 #more scales!
 
 bands = {
@@ -75,12 +73,11 @@ def main():
     running = True 
 
 
-
     try:
         while running: 
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:  # Press Esc to quit
+                    if event.key == pygame.K_ESCAPE:  # esc to quit
                         exit()
                 elif event.type == pygame.QUIT:
                     exit()
@@ -94,7 +91,7 @@ def main():
 
             data = stream.read(CHUNK, exception_on_overflow=False)
             samples = np.frombuffer(data, dtype=np.int16).astype(np.float32) #turn bytes to ints 
-            line.set_ydata(samples) #update the heights 
+            #line.set_ydata(samples) #update the heights 
 
             samples -= samples.mean() #remove offset from bg noise
             mag = np.abs(np.fft.rfft(samples * window)) #funky fft stuff. how much of each frequency is in each sample? 
@@ -141,7 +138,7 @@ def main():
     
         
 
-        
+#pygame particle stuff      
 
 class Particle(pygame.sprite.Sprite):
     def __init__(self, groups, pos, color, direction, speed):
@@ -157,7 +154,7 @@ class Particle(pygame.sprite.Sprite):
     def create_surf(self):
         self.image = pygame.Surface((4,4)).convert_alpha()
         self.image.set_colorkey("black")
-        pygame.draw.circle(surface=self.image, color=self.color, center=(2,2), radius=2)
+        pygame.draw.circle(surface=self.image, color=self.color, center=(2,2), radius=7)
         self.rect = self.image.get_rect(center=self.pos)
 
 
