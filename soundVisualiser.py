@@ -99,10 +99,10 @@ def wiggle_color(color, varyBy):
    
     return tuple(newColor)
 
-bassColors = [(0, 242, 193), (255, 44, 223), (255, 136, 0)]
-lowMidColors = [(255, 44, 223)]
-highMidColors = [(0, 69, 255)]
-highColors = [(255, 136, 0)]
+bassColors = [(0, 242, 193), (0,255,255), (127,255,212)]
+lowMidColors = [(255, 44, 223), (255,20,147), (255,105,180)]
+highMidColors = [(0, 69, 255), (0,191,255), (30,144,255)]
+highColors = [(255, 136, 0), (255,127,80), (255,140,0)]
 
 
 
