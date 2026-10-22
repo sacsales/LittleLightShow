@@ -23,12 +23,18 @@ LOWS_LOWER_BOUND = 20
 MIDS_LOWER_BOUND = 250
 MIDS_UPPER_BOUND = 800
 
+bassColors = [(0, 69, 255), (0,191,255), (30,144,255)] #darker blues
+lowMidColors = [(255, 44, 223), (255,20,147), (255,105,180)] #pinks
+highMidColors = [(255, 136, 0), (255,127,80), (255,140,0)] #oranges
+highColors = [(0,255,255), (127,255,212), (64,224,208)] #cyans
+
+
 
 p = pyaudio.PyAudio()
 stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE,
                 input=True, frames_per_buffer=CHUNK) #take mic input!
 
-#plt.ion()
+
 fig, ax = plt.subplots(figsize=(15, 8)) #make the matplotlib graph
 x = np.arange(CHUNK) #make list of numbers. how many? chunk. 
 freqs = np.fft.rfftfreq(CHUNK, 1 / RATE) #analysis's wave's x - all the different frequency buckets 
@@ -46,15 +52,6 @@ ax.set_facecolor("black")
 #background set to black to blend in
 
 
-
-#set scales and stuff 
-#line_fft, = ax2.semilogx(freqs[1:], np.zeros(len(freqs) - 1), lw=2)
-#semi log to fit the scale. remove 0hz (no log). xs at the freq buckets, ys at 0s
-
-#ax2.set_xlim(20, RATE / 2)
-#ax2.set_ylim(0, 0.1)  
-#more scales!
-
 matplotlib.use("Agg") 
 canvas = agg.FigureCanvasAgg(fig)
 #put on pygame screen, not a new window 
@@ -67,16 +64,9 @@ plot_surface = pygame.image.fromstring(raw_data, size, "ARGB")
 canvas.draw()
 #add graph to screen
 
-bands = {
-    "bass":   (20, 150),
-    "lowmid": (150, 400),
-    "vocals": (300, 3500),
-    "highs":  (3500, 12000),
-}
 
 
 
-#plt.show(block=False)
 
 
 particle_group = pygame.sprite.Group()
@@ -87,23 +77,7 @@ def spawn_particles(n, colorOptions, radius, speed):
         newColor = choice(colorOptions)
         direction = pygame.math.Vector2(uniform(-1, 1), uniform(-1, 1))
         direction = direction.normalize()
-        #speed = randint(50, 400)
         Particle(particle_group, pos, newColor, direction, speed, radius=radius)
-
-def wiggle_color(color, varyBy):
-
-    color = np.array(color)
-    offset = np.random.randint(-varyBy, varyBy)
-    newColor = color + offset
-    #newColor = np.clip(newColor, 1, 244)
-   
-    return tuple(newColor)
-
-bassColors = [(0, 242, 193), (0,255,255), (127,255,212)]
-lowMidColors = [(255, 44, 223), (255,20,147), (255,105,180)]
-highMidColors = [(0, 69, 255), (0,191,255), (30,144,255)]
-highColors = [(255, 136, 0), (255,127,80), (255,140,0)]
-
 
 
                
@@ -118,8 +92,6 @@ def main():
                         exit()
                 elif event.type == pygame.QUIT:
                     exit()
-                #elif event.type == pygame.MOUSEBUTTONDOWN:
-                    #spawn_particles(200)
 
             if not running:
                 break
@@ -161,10 +133,10 @@ def main():
             total_particle_count = bass_particle_count + mids_particle_count + highs_particle_count + highMids_particle_count
 
             if total_particle_count > 0:
-                spawn_particles(bass_particle_count, bassColors, 100, 20) #cyan
-                spawn_particles(mids_particle_count, lowMidColors, 60, 40) #pink
-                spawn_particles(highMids_particle_count, highMidColors, 10, 100) #elec blue
-                spawn_particles(highs_particle_count, highColors, 30, 200) #orange
+                spawn_particles(bass_particle_count, bassColors, 100, 20) 
+                spawn_particles(mids_particle_count, lowMidColors, 60, 40) 
+                spawn_particles(highMids_particle_count, highMidColors, 10, 100) 
+                spawn_particles(highs_particle_count, highColors, 30, 200) 
                
 
 
@@ -180,13 +152,7 @@ def main():
             particle_group.update(dt)
             pygame.display.flip() 
 
-            #print("Bass:", bass_strength, "Particles:", particle_count)
-
-
-            #line_fft.set_ydata(newMag) #fft adds up everything! divide by no. of samples * 32768 - convert from very very number to something on scale 
-
-            #fig.canvas.draw() 
-            #fig.canvas.flush_events()
+            
             
     finally:
         stream.stop_stream()
@@ -222,7 +188,6 @@ class Particle(pygame.sprite.Sprite):
     def move(self, dt):
         self.pos += self.direction * self.speed * dt
         self.rect.center = self.pos 
-
 
     def fade(self, dt):
         self.alpha -= self.fade_speed * dt 
