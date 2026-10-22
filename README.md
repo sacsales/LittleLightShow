@@ -28,12 +28,12 @@ https://github.com/user-attachments/assets/8421502b-c8e4-4fcd-b54f-e54b802d9170
 - Relative 'strength' of each bucket computed and normalized to fit on a 0-1 scale
 - Using PyGame, particles of a certain color, size and speed spawn on screen based on strength of bucket. The larger and slower, the lower the frequency. Also, adds a waveform of the current sound (made with Matplotlib)
 
-## Libraries/Dependencies ##
-python                    3.14.6
-matplotlib                3.11.2
-numpy                     2.5.2
-PyAudio                   0.2.14
-pygame                    2.6.1
+## Libraries/Dependencies/Versions ##
+- python                    3.14.6
+- matplotlib                3.11.2
+- numpy                     2.5.2
+- PyAudio                   0.2.14
+- pygame                    2.6.1
 
 ## Known Issues ## 
 For very very loud sounds (ie, right next to an amplifier or something) tons and tons of particles will spawn and may cause some lag. 
