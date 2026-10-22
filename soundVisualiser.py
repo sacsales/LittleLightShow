@@ -26,29 +26,28 @@ MIDS_UPPER_BOUND = 800
 
 p = pyaudio.PyAudio()
 stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE,
-                input=True, frames_per_buffer=CHUNK) #take mic input
+                input=True, frames_per_buffer=CHUNK) #take mic input!
 
 #plt.ion()
-fig, ax = plt.subplots(figsize=(15, 8))
-
+fig, ax = plt.subplots(figsize=(15, 8)) #make the matplotlib graph
 x = np.arange(CHUNK) #make list of numbers. how many? chunk. 
 freqs = np.fft.rfftfreq(CHUNK, 1 / RATE) #analysis's wave's x - all the different frequency buckets 
-freq_bins = freqs[1:]
+freq_bins = freqs[1:] #delete 0hz frequency bin
 window = np.hanning(CHUNK) #smooth. 
 
 line, = ax.plot(x, np.zeros(CHUNK), color="white") #make flat line. changes in loop
 ax.set_position([0, 0, 1, 1])
 ax.set_ylim(-32768, 32767)
 ax.set_xlim(0, CHUNK)
+#set axes + pos on screen
 
 fig.patch.set_facecolor("black")
 ax.set_facecolor("black")
-#ax2.set_facecolor("black")
+#background set to black to blend in
 
 
 
 #set scales and stuff 
-
 #line_fft, = ax2.semilogx(freqs[1:], np.zeros(len(freqs) - 1), lw=2)
 #semi log to fit the scale. remove 0hz (no log). xs at the freq buckets, ys at 0s
 
@@ -56,15 +55,17 @@ ax.set_facecolor("black")
 #ax2.set_ylim(0, 0.1)  
 #more scales!
 
-matplotlib.use("Agg")
-
+matplotlib.use("Agg") 
 canvas = agg.FigureCanvasAgg(fig)
+#put on pygame screen, not a new window 
+
 
 renderer = canvas.get_renderer()
 raw_data = renderer.tostring_argb()
 size = canvas.get_width_height()
 plot_surface = pygame.image.fromstring(raw_data, size, "ARGB")
 canvas.draw()
+#add graph to screen
 
 bands = {
     "bass":   (20, 150),
@@ -80,21 +81,35 @@ bands = {
 
 particle_group = pygame.sprite.Group()
 
-def spawn_particles(n, color, radius):
+def spawn_particles(n, colorOptions, radius, speed):
     for _ in range(n):
         pos = (randint(0, SCREEN_WIDTH), randint(0, SCREEN_HEIGHT))
-        color = color
+        newColor = choice(colorOptions)
         direction = pygame.math.Vector2(uniform(-1, 1), uniform(-1, 1))
         direction = direction.normalize()
-        speed = randint(50, 400)
-        Particle(particle_group, pos, color, direction, speed, radius=radius)
+        #speed = randint(50, 400)
+        Particle(particle_group, pos, newColor, direction, speed, radius=radius)
+
+def wiggle_color(color, varyBy):
+
+    color = np.array(color)
+    offset = np.random.randint(-varyBy, varyBy)
+    newColor = color + offset
+    #newColor = np.clip(newColor, 1, 244)
+   
+    return tuple(newColor)
+
+bassColors = [(0, 242, 193), (255, 44, 223), (255, 136, 0)]
+lowMidColors = [(255, 44, 223)]
+highMidColors = [(0, 69, 255)]
+highColors = [(255, 136, 0)]
 
 
+
+               
 def main():
 
     running = True 
-
-
     try:
         while running: 
             for event in pygame.event.get():
@@ -114,20 +129,19 @@ def main():
             data = stream.read(CHUNK, exception_on_overflow=False)
             samples = np.frombuffer(data, dtype=np.int16).astype(np.float32) #turn bytes to ints 
             line.set_ydata(samples) #update the heights 
-            canvas.draw()
+            canvas.draw() 
 
             plot_surface = pygame.image.frombuffer(bytes(canvas.buffer_rgba()), canvas.get_width_height(),"RGBA")
             
-
             samples -= samples.mean() #remove offset from bg noise
             mag = np.abs(np.fft.rfft(samples * window)) #funky fft stuff. how much of each frequency is in each sample? 
 
             newMag = mag[1:] * 4 / (CHUNK * 32768)
 
-            bass = newMag[(freq_bins >= 20) & (freq_bins < 150)]
+            bass = newMag[(freq_bins >= 50) & (freq_bins < 150)]
             bass_strength = np.mean(bass) if len(bass) else 0
             bass_level = np.clip(bass_strength * 100, 0, 1)
-            bass_particle_count = int(bass_level * 5)
+            bass_particle_count = int(bass_level * 2)
 
             mids = newMag[(freq_bins >= 150) & (freq_bins < 400)]
             mids_strength = np.mean(mids) if len(mids) else 0
@@ -147,10 +161,11 @@ def main():
             total_particle_count = bass_particle_count + mids_particle_count + highs_particle_count + highMids_particle_count
 
             if total_particle_count > 0:
-                spawn_particles(bass_particle_count, (0, 242, 193), 40) #cyan
-                spawn_particles(mids_particle_count, (255, 44, 223), 20) #pink
-                spawn_particles(highs_particle_count, (255, 136, 0), 10) #orange
-                spawn_particles(highMids_particle_count, (0, 69, 255), 10) #elec blue
+                spawn_particles(bass_particle_count, bassColors, 100, 20) #cyan
+                spawn_particles(mids_particle_count, lowMidColors, 60, 40) #pink
+                spawn_particles(highMids_particle_count, highMidColors, 10, 100) #elec blue
+                spawn_particles(highs_particle_count, highColors, 30, 200) #orange
+               
 
 
             
@@ -180,7 +195,6 @@ def main():
 
     
     
-        
 
 #pygame particle stuff...
 
@@ -199,9 +213,9 @@ class Particle(pygame.sprite.Sprite):
         self.create_surf(radius)
 
     def create_surf(self, radius):
-        self.image = pygame.Surface((80,80)).convert_alpha()
+        self.image = pygame.Surface((300,300)).convert_alpha()
         self.image.set_colorkey("black")
-        pygame.draw.circle(surface=self.image, color=self.color, center=(40,40), radius=radius)
+        pygame.draw.circle(surface=self.image, color=self.color, center=(150,150), radius=radius)
         self.rect = self.image.get_rect(center=self.pos)
 
 
@@ -209,7 +223,6 @@ class Particle(pygame.sprite.Sprite):
         self.pos += self.direction * self.speed * dt
         self.rect.center = self.pos 
 
-    
 
     def fade(self, dt):
         self.alpha -= self.fade_speed * dt 
