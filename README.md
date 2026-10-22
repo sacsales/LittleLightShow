@@ -10,15 +10,10 @@ A sound-sensitive lightshow! Designed for use as a makeshift background for a ba
 ## Demo ## 
 
 
-
-https://github.com/user-attachments/assets/b60b7c6d-b96e-49cb-aa9f-ece8b24daf49
-In Action
+https://github.com/user-attachments/assets/4e6345dd-1d5d-4445-b6f1-5d892be460a1
 
 
-https://github.com/user-attachments/assets/f7409a0b-baf5-4ab8-b8e4-7920f932d9f1
-Screen View
-
-
+https://github.com/user-attachments/assets/8421502b-c8e4-4fcd-b54f-e54b802d9170
 
 
 
