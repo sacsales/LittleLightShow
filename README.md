@@ -38,5 +38,13 @@ https://github.com/user-attachments/assets/8421502b-c8e4-4fcd-b54f-e54b802d9170
 ## Known Issues ## 
 For very very loud sounds (ie, right next to an amplifier or something) tons and tons of particles will spawn and may cause some lag. 
 
+
+## Tutorials/References 
+- https://www.youtube.com/watch?v=O0Y8FChBaFU
+- https://www.youtube.com/watch?v=rj9NOiFLxWA&t=207s
+- https://www.youtube.com/watch?v=ZqpSb5p1xQo
+- https://www.youtube.com/watch?v=AShHJdSIxkY&t=851s
+- https://www.youtube.com/watch?v=aQKX3mrDFoY
+- https://www.youtube.com/watch?v=ZiPWN39mGM0
  
       
